@@ -33,3 +33,11 @@ Example (Windows)
 ```shell
 uruzcopier asyncCopy -s \path\to\source -d \path\to\source -c 10
 ```
+
+how to compile
+it requieres go 1.22 or later
+
+clone the repo an run 
+```shell
+go build
+```
