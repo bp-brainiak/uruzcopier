@@ -1,7 +1,6 @@
 # uruzcopier
 Another file copy utility with some cool stuff
-
-[![Go](https://github.com/bp-brainiak/uruzcopier/actions/workflows/go.yml/badge.svg)](https://github.com/bp-brainiak/uruzcopier/actions/workflows/go.yml)
+[![Go](https://github.com/bp-brainiak/uruzcopier/actions/workflows/go.yml/badge.svg?branch=main)](https://github.com/bp-brainiak/uruzcopier/actions/workflows/go.yml)
 
 ## Features
 asynchronous multithread recursive directory copying.
