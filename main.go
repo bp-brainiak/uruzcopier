@@ -16,8 +16,15 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 package main
 
-import "uruzcopier/cmd"
+import (
+	"fmt"
+	"uruzcopier/cmd"
+)
 
 func main() {
+	fmt.Println("uruzcopier v 0.0.1a (c) 2024 Ulises Ruz Puga, released under GPLv2")
+	fmt.Println("this software comes with ABSOLUTELY NO WARRANTY")
+	fmt.Println("This is free software, and you are welcome to redistribute it")
+	fmt.Println("under certain conditions; see the GNU General Public License v2 for details")
 	cmd.Execute()
 }

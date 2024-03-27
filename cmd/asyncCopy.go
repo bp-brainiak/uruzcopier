@@ -109,7 +109,7 @@ var asyncCopyCmd = &cobra.Command{
 		concurrent, _ := cmd.Flags().GetInt("concurrency")
 		if srcDir == "" || dstDir == "" {
 			cmd.Help()
-			os.Exit(0)
+			os.Exit(1)
 		}
 		startCopy(srcDir, dstDir, concurrent)
 
