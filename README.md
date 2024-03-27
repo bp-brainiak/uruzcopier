@@ -14,7 +14,7 @@ Usage:
 uruzcopier asyncCopy [flags]
 
 Flags:
-----------------------
+
 | Flag              | type   | Description                                     |
 |-------------------|--------|-------------------------------------------------|
 | -s, --srcDir      |string  | Source directory                                | 
