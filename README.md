@@ -31,7 +31,7 @@ uruzcopier asyncCopy -s /path/to/source -d /path/to/destination -c 10
 Example (Windows)
 
 ```shell
-uruzcopier asyncCopy -s \path\to\source -d \path\to\source -c 10
+uruzcopier asyncCopy -s \path\to\source -d \path\to\destination -c 10
 ```
 
 how to compile
