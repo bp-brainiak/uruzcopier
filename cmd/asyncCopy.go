@@ -19,6 +19,7 @@ package cmd
 import (
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"sync"
@@ -26,7 +27,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func copyFile(src, dst string) error {
+func copyFile(src, dst string, overwrite bool) error {
 	fmt.Println(src, "->", dst)
 	sourceFile, err := os.Open(src)
 	var bytescopied int64
@@ -34,23 +35,56 @@ func copyFile(src, dst string) error {
 	if err != nil {
 		return err
 	}
+	if !overwrite {
+		err2 := CopyDataFile(sourceFile, dst, bytescopied)
+		if err2 != nil {
+			return err2
+		}
+	} else {
+		f1, err := os.Stat(src)
+		if err != nil {
+			log.Println(err)
+		}
+		f2, err := os.Stat(dst)
+		if err != nil {
+			return err
+		}
+		if !os.SameFile(f1, f2) {
+			err2 := CopyDataFile(sourceFile, dst, bytescopied)
+			if err2 != nil {
+				return err2
+			}
+		} else {
+			fmt.Println("Files are the same, skipping")
+		}
+	}
+	return nil
+}
+
+func CopyDataFile(sourceFile *os.File, dst string, bytescopied int64) error {
 	defer sourceFile.Close()
 
 	destFile, err := os.Create(dst)
 	if err != nil {
 		return err
 	}
+
 	defer destFile.Close()
 
 	bytescopied, err = io.Copy(destFile, sourceFile)
+
+	if err = destFile.Sync(); err != nil {
+		return err
+	}
 	if err != nil {
 		return err
 	}
+
 	fmt.Println(dst, "Copied - ", bytescopied, "bytes")
 	return nil
 }
 
-func copyDir(src, dst string, wg *sync.WaitGroup, sem chan struct{}) error {
+func copyDir(src, dst string, overwrite bool, wg *sync.WaitGroup, sem chan struct{}) error {
 	entries, err := os.ReadDir(src)
 	if err != nil {
 		return err
@@ -67,7 +101,7 @@ func copyDir(src, dst string, wg *sync.WaitGroup, sem chan struct{}) error {
 			go func(src, dst string) {
 				defer wg.Done()
 				sem <- struct{}{} // acquire a token
-				copyDir(src, dst, wg, sem)
+				copyDir(src, dst, overwrite, wg, sem)
 				<-sem // release the token
 			}(srcPath, dstPath)
 		} else {
@@ -75,7 +109,7 @@ func copyDir(src, dst string, wg *sync.WaitGroup, sem chan struct{}) error {
 			go func(src, dst string) {
 				defer wg.Done()
 				sem <- struct{}{} // acquire a token
-				copyFile(src, dst)
+				copyFile(src, dst, overwrite)
 				<-sem // release the token
 			}(srcPath, dstPath)
 		}
@@ -83,7 +117,7 @@ func copyDir(src, dst string, wg *sync.WaitGroup, sem chan struct{}) error {
 
 	return nil
 }
-func startCopy(srcDir, dstDir string, concurrent int) {
+func startCopy(srcDir, dstDir string, concurrent int, overwrite bool) {
 	var wg sync.WaitGroup
 	sem := make(chan struct{}, concurrent)
 
@@ -91,7 +125,7 @@ func startCopy(srcDir, dstDir string, concurrent int) {
 	go func() {
 		defer wg.Done()
 		sem <- struct{}{} // acquire a tokengit
-		copyDir(srcDir, dstDir, &wg, sem)
+		copyDir(srcDir, dstDir, overwrite, &wg, sem)
 		<-sem
 	}()
 
@@ -107,11 +141,12 @@ var asyncCopyCmd = &cobra.Command{
 		srcDir, _ := cmd.Flags().GetString("srcDir")
 		dstDir, _ := cmd.Flags().GetString("dstDir")
 		concurrent, _ := cmd.Flags().GetInt("concurrency")
+		overwrite, _ := cmd.Flags().GetBool("OverwriteIfDifferent")
 		if srcDir == "" || dstDir == "" {
 			cmd.Help()
 			os.Exit(1)
 		}
-		startCopy(srcDir, dstDir, concurrent)
+		startCopy(srcDir, dstDir, concurrent, overwrite)
 
 	},
 }
@@ -120,6 +155,7 @@ func init() {
 	asyncCopyCmd.Flags().StringP("srcDir", "s", "", "Source directory")
 	asyncCopyCmd.Flags().StringP("dstDir", "d", "", "Destination directory")
 	asyncCopyCmd.Flags().IntP("concurrency", "c", 10, "Number of concurrent files to copy")
+	asyncCopyCmd.Flags().BoolP("OverwriteIfDifferent", "o", true, "Overwrite destination file if different")
 	rootCmd.AddCommand(asyncCopyCmd)
 
 	// Here you will define your flags and configuration settings.
